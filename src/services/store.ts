@@ -6,9 +6,16 @@ import {
 } from 'react-redux';
 
 import { rootReducer } from './rootReducer';
+import { socketMiddleware } from './middleware/socketMiddleware';
+import { feedWsActions, profileOrdersWsActions } from './ws/wsActions';
 
 const store = configureStore({
   reducer: rootReducer,
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware().concat(
+      socketMiddleware(feedWsActions),
+      socketMiddleware(profileOrdersWsActions)
+    ),
   devTools: process.env.NODE_ENV !== 'production'
 });
 
