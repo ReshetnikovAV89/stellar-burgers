@@ -162,6 +162,11 @@ const authSlice = createSlice({
         state.user = null;
         state.isAuthChecked = true;
       })
+      .addCase(logoutUser.rejected, (state, action) => {
+        state.user = null;
+        state.isAuthChecked = true;
+        state.error = action.payload ?? 'Error';
+      })
 
       .addCase(updateUser.pending, (state) => {
         state.isLoading = true;

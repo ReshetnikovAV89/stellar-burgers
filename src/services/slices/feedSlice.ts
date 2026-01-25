@@ -51,11 +51,16 @@ const feedSlice = createSlice({
       .addCase(
         feedWsActions.message,
         (state, action: PayloadAction<string>) => {
-          const data = JSON.parse(action.payload) as TFeedWsPayload;
-          if (!data?.success) return;
-          state.orders = data.orders;
-          state.total = data.total;
-          state.totalToday = data.totalToday;
+          try {
+            const data = JSON.parse(action.payload) as TFeedWsPayload;
+            if (!data?.success) return;
+            state.orders = data.orders;
+            state.total = data.total;
+            state.totalToday = data.totalToday;
+          } catch {
+            state.error = 'WebSocket error: invalid message format';
+            state.wsStatus = 'offline';
+          }
         }
       );
   }

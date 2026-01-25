@@ -9,12 +9,27 @@ export const socketMiddleware =
     return (next) => (action) => {
       if (wsActions.connect.match(action)) {
         if (socket) socket.close();
+
         next(wsActions.connecting());
+
         socket = new WebSocket((action as { payload: string }).payload);
 
         socket.onopen = () => next(wsActions.open());
-        socket.onclose = () => next(wsActions.close());
-        socket.onerror = () => next(wsActions.error('WebSocket error'));
+
+        socket.onclose = (event) => {
+          next(wsActions.close());
+          if (!event.wasClean) {
+            next(
+              wsActions.error(
+                `WebSocket closed: code=${event.code} reason=${event.reason || 'no-reason'}`
+              )
+            );
+          }
+        };
+
+        socket.onerror = () =>
+          next(wsActions.error('WebSocket error: connection failed'));
+
         socket.onmessage = (event) => next(wsActions.message(event.data));
 
         return;

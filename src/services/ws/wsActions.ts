@@ -1,53 +1,37 @@
-import { createAction } from '@reduxjs/toolkit';
+import {
+  ActionCreatorWithOptionalPayload,
+  ActionCreatorWithPayload,
+  createAction
+} from '@reduxjs/toolkit';
 
 export type TWsStatus = 'offline' | 'connecting' | 'online';
 
-type TNoPayload = (() => { type: string }) & {
-  type: string;
-  match: (action: unknown) => boolean;
-};
-
-type TWithPayload = ((payload: string) => { type: string; payload: string }) & {
-  type: string;
-  match: (action: unknown) => boolean;
-};
-
 export type TWsActions = {
-  connect: TWithPayload;
-  disconnect: TNoPayload;
-  connecting: TNoPayload;
-  open: TNoPayload;
-  close: TNoPayload;
-  error: TWithPayload;
-  message: TWithPayload;
+  connect: ActionCreatorWithPayload<string, string>;
+  disconnect: ActionCreatorWithOptionalPayload<undefined, string>;
+  connecting: ActionCreatorWithOptionalPayload<undefined, string>;
+  open: ActionCreatorWithOptionalPayload<undefined, string>;
+  close: ActionCreatorWithOptionalPayload<undefined, string>;
+  error: ActionCreatorWithPayload<string, string>;
+  message: ActionCreatorWithPayload<string, string>;
 };
 
 export const feedWsActions: TWsActions = {
-  connect: createAction<string>('feed/wsConnect') as unknown as TWithPayload,
-  disconnect: createAction('feed/wsDisconnect') as unknown as TNoPayload,
-  connecting: createAction('feed/wsConnecting') as unknown as TNoPayload,
-  open: createAction('feed/wsOpen') as unknown as TNoPayload,
-  close: createAction('feed/wsClose') as unknown as TNoPayload,
-  error: createAction<string>('feed/wsError') as unknown as TWithPayload,
-  message: createAction<string>('feed/wsMessage') as unknown as TWithPayload
+  connect: createAction<string>('feed/wsConnect'),
+  disconnect: createAction('feed/wsDisconnect'),
+  connecting: createAction('feed/wsConnecting'),
+  open: createAction('feed/wsOpen'),
+  close: createAction('feed/wsClose'),
+  error: createAction<string>('feed/wsError'),
+  message: createAction<string>('feed/wsMessage')
 };
 
 export const profileOrdersWsActions: TWsActions = {
-  connect: createAction<string>(
-    'profileOrders/wsConnect'
-  ) as unknown as TWithPayload,
-  disconnect: createAction(
-    'profileOrders/wsDisconnect'
-  ) as unknown as TNoPayload,
-  connecting: createAction(
-    'profileOrders/wsConnecting'
-  ) as unknown as TNoPayload,
-  open: createAction('profileOrders/wsOpen') as unknown as TNoPayload,
-  close: createAction('profileOrders/wsClose') as unknown as TNoPayload,
-  error: createAction<string>(
-    'profileOrders/wsError'
-  ) as unknown as TWithPayload,
-  message: createAction<string>(
-    'profileOrders/wsMessage'
-  ) as unknown as TWithPayload
+  connect: createAction<string>('profileOrders/wsConnect'),
+  disconnect: createAction('profileOrders/wsDisconnect'),
+  connecting: createAction('profileOrders/wsConnecting'),
+  open: createAction('profileOrders/wsOpen'),
+  close: createAction('profileOrders/wsClose'),
+  error: createAction<string>('profileOrders/wsError'),
+  message: createAction<string>('profileOrders/wsMessage')
 };
