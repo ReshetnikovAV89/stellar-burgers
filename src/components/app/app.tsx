@@ -21,7 +21,7 @@ import {
   ResetPassword
 } from '@pages';
 
-import { FC } from 'react';
+import { FC, useEffect } from 'react';
 import {
   BrowserRouter,
   Route,
@@ -29,6 +29,9 @@ import {
   useLocation,
   useNavigate
 } from 'react-router-dom';
+
+import { useDispatch } from '../../services/store';
+import { checkUserAuth } from '../../services/slices/authSlice';
 
 type TLocationState = {
   background?: Location;
@@ -146,13 +149,21 @@ const AppRoutes: FC = () => {
   );
 };
 
-const App: FC = () => (
-  <BrowserRouter>
-    <div className={styles.app}>
-      <AppHeader />
-      <AppRoutes />
-    </div>
-  </BrowserRouter>
-);
+const App: FC = () => {
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(checkUserAuth());
+  }, [dispatch]);
+
+  return (
+    <BrowserRouter>
+      <div className={styles.app}>
+        <AppHeader />
+        <AppRoutes />
+      </div>
+    </BrowserRouter>
+  );
+};
 
 export default App;

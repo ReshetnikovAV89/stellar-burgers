@@ -1,5 +1,6 @@
 import { FC, ReactElement } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
+import { useSelector } from '../../services/store';
 
 type ProtectedRouteProps = {
   children: ReactElement;
@@ -11,7 +12,13 @@ export const ProtectedRoute: FC<ProtectedRouteProps> = ({
   onlyUnAuth
 }) => {
   const location = useLocation();
-  const isAuthenticated = Boolean(localStorage.getItem('refreshToken'));
+  const { user, isAuthChecked } = useSelector((state) => state.auth);
+
+  if (!isAuthChecked) {
+    return null;
+  }
+
+  const isAuthenticated = Boolean(user);
 
   if (onlyUnAuth && isAuthenticated) {
     return <Navigate to='/' replace />;
