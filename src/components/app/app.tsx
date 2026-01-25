@@ -32,6 +32,7 @@ import {
 
 import { useDispatch } from '../../services/store';
 import { checkUserAuth } from '../../services/slices/authSlice';
+import { fetchIngredients } from '../../services/slices/ingredientsSlice';
 
 type TLocationState = {
   background?: Location;
@@ -154,6 +155,7 @@ const App: FC = () => {
 
   useEffect(() => {
     dispatch(checkUserAuth());
+    dispatch(fetchIngredients());
   }, [dispatch]);
 
   return (
