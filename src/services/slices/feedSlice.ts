@@ -1,31 +1,48 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import type { TOrder } from '../../utils/types';
-import type { TWsStatus } from '../ws/wsActions';
-import { feedWsActions } from '../ws/wsActions';
 
 type TFeedState = {
   orders: TOrder[];
   total: number;
   totalToday: number;
-  wsStatus: TWsStatus;
+  isLoading: boolean;
   error: string | null;
+};
+
+type TFeedResponse = {
+  success: boolean;
+  orders: TOrder[];
+  total: number;
+  totalToday: number;
 };
 
 const initialState: TFeedState = {
   orders: [],
   total: 0,
   totalToday: 0,
-  wsStatus: 'offline',
+  isLoading: false,
   error: null
 };
 
-type TFeedWsPayload = {
-  success: boolean;
-  orders: TOrder[];
-  total: number;
-  totalToday: number;
-};
+export const fetchFeedOrders = createAsyncThunk<
+  TFeedResponse,
+  void,
+  { rejectValue: string }
+>('feed/fetchFeedOrders', async (_, { rejectWithValue }) => {
+  try {
+    const res = await fetch('https://norma.nomoreparties.space/api/orders/all');
+    const data = (await res.json()) as TFeedResponse;
+
+    if (!res.ok || !data?.success) {
+      return rejectWithValue('Failed to fetch feed orders');
+    }
+
+    return data;
+  } catch {
+    return rejectWithValue('Failed to fetch feed orders');
+  }
+});
 
 const feedSlice = createSlice({
   name: 'feed',
@@ -33,36 +50,23 @@ const feedSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
-      .addCase(feedWsActions.connecting, (state) => {
-        state.wsStatus = 'connecting';
+      .addCase(fetchFeedOrders.pending, (state) => {
+        state.isLoading = true;
         state.error = null;
-      })
-      .addCase(feedWsActions.open, (state) => {
-        state.wsStatus = 'online';
-        state.error = null;
-      })
-      .addCase(feedWsActions.close, (state) => {
-        state.wsStatus = 'offline';
-      })
-      .addCase(feedWsActions.error, (state, action: PayloadAction<string>) => {
-        state.error = action.payload;
-        state.wsStatus = 'offline';
       })
       .addCase(
-        feedWsActions.message,
-        (state, action: PayloadAction<string>) => {
-          try {
-            const data = JSON.parse(action.payload) as TFeedWsPayload;
-            if (!data?.success) return;
-            state.orders = data.orders;
-            state.total = data.total;
-            state.totalToday = data.totalToday;
-          } catch {
-            state.error = 'WebSocket error: invalid message format';
-            state.wsStatus = 'offline';
-          }
+        fetchFeedOrders.fulfilled,
+        (state, action: PayloadAction<TFeedResponse>) => {
+          state.isLoading = false;
+          state.orders = action.payload.orders;
+          state.total = action.payload.total;
+          state.totalToday = action.payload.totalToday;
         }
-      );
+      )
+      .addCase(fetchFeedOrders.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload || 'Failed to fetch feed orders';
+      });
   }
 });
 

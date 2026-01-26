@@ -1,25 +1,54 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import type { TOrder } from '../../utils/types';
-import type { TWsStatus } from '../ws/wsActions';
-import { profileOrdersWsActions } from '../ws/wsActions';
+import { getCookie } from '../../utils/cookie';
 
 type TProfileOrdersState = {
   orders: TOrder[];
-  wsStatus: TWsStatus;
+  isLoading: boolean;
   error: string | null;
+};
+
+type TProfileOrdersResponse = {
+  success: boolean;
+  orders: TOrder[];
 };
 
 const initialState: TProfileOrdersState = {
   orders: [],
-  wsStatus: 'offline',
+  isLoading: false,
   error: null
 };
 
-type TProfileOrdersWsPayload = {
-  success: boolean;
-  orders: TOrder[];
-};
+export const fetchProfileOrders = createAsyncThunk<
+  TProfileOrdersResponse,
+  void,
+  { rejectValue: string }
+>('profileOrders/fetchProfileOrders', async (_, { rejectWithValue }) => {
+  try {
+    const token = getCookie('accessToken');
+
+    if (!token) {
+      return rejectWithValue('Unauthorized');
+    }
+
+    const res = await fetch('https://norma.nomoreparties.space/api/orders', {
+      headers: {
+        authorization: token
+      }
+    });
+
+    const data = (await res.json()) as TProfileOrdersResponse;
+
+    if (!res.ok || !data?.success) {
+      return rejectWithValue('Failed to fetch profile orders');
+    }
+
+    return data;
+  } catch {
+    return rejectWithValue('Failed to fetch profile orders');
+  }
+});
 
 const profileOrdersSlice = createSlice({
   name: 'profileOrders',
@@ -27,32 +56,21 @@ const profileOrdersSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
-      .addCase(profileOrdersWsActions.connecting, (state) => {
-        state.wsStatus = 'connecting';
+      .addCase(fetchProfileOrders.pending, (state) => {
+        state.isLoading = true;
         state.error = null;
-      })
-      .addCase(profileOrdersWsActions.open, (state) => {
-        state.wsStatus = 'online';
-        state.error = null;
-      })
-      .addCase(profileOrdersWsActions.close, (state) => {
-        state.wsStatus = 'offline';
       })
       .addCase(
-        profileOrdersWsActions.error,
-        (state, action: PayloadAction<string>) => {
-          state.error = action.payload;
-          state.wsStatus = 'offline';
+        fetchProfileOrders.fulfilled,
+        (state, action: PayloadAction<TProfileOrdersResponse>) => {
+          state.isLoading = false;
+          state.orders = action.payload.orders;
         }
       )
-      .addCase(
-        profileOrdersWsActions.message,
-        (state, action: PayloadAction<string>) => {
-          const data = JSON.parse(action.payload) as TProfileOrdersWsPayload;
-          if (!data?.success) return;
-          state.orders = data.orders;
-        }
-      );
+      .addCase(fetchProfileOrders.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload || 'Failed to fetch profile orders';
+      });
   }
 });
 

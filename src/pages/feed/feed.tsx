@@ -2,35 +2,24 @@ import { Preloader } from '@ui';
 import { FeedUI } from '@ui-pages';
 import { FC, useCallback, useEffect } from 'react';
 import { useDispatch, useSelector } from '../../services/store';
-import { feedWsActions } from '../../services/ws/wsActions';
-
-const WS_FEED_URL = 'wss://norma.nomoreparties.space/orders/all';
+import { fetchFeedOrders } from '../../services/slices/feedSlice';
 
 export const Feed: FC = () => {
   const dispatch = useDispatch();
 
   const orders = useSelector((state) => state.feed.orders);
-  const wsStatus = useSelector((state) => state.feed.wsStatus);
-  const error = useSelector((state) => state.feed.error);
-
-  useEffect(() => {
-    dispatch(feedWsActions.connect(WS_FEED_URL));
-    return () => {
-      dispatch(feedWsActions.disconnect());
-    };
-  }, [dispatch]);
+  const isLoading = useSelector((state) => state.feed.isLoading);
 
   const handleGetFeeds = useCallback(() => {
-    dispatch(feedWsActions.disconnect());
-    dispatch(feedWsActions.connect(WS_FEED_URL));
+    dispatch(fetchFeedOrders());
   }, [dispatch]);
 
-  if (wsStatus === 'connecting') {
-    return <Preloader />;
-  }
+  useEffect(() => {
+    dispatch(fetchFeedOrders());
+  }, [dispatch]);
 
-  if (error) {
-    return <FeedUI orders={orders} handleGetFeeds={handleGetFeeds} />;
+  if (isLoading) {
+    return <Preloader />;
   }
 
   return <FeedUI orders={orders} handleGetFeeds={handleGetFeeds} />;
