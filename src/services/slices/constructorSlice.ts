@@ -26,40 +26,60 @@ const initialState: ConstructorState = {
   orderModalData: null
 };
 
-export const createOrder = createAsyncThunk<TOrder, string[]>(
-  'constructor/createOrder',
-  async (ingredientIds) => {
-    const res = await orderBurgerApi(ingredientIds);
-    return res.order;
+export const createOrder = createAsyncThunk<
+  TOrder,
+  string[],
+  { rejectValue: string }
+>(
+  'burgerConstructor/createOrder',
+  async (ingredientsIds, { rejectWithValue }) => {
+    try {
+      const data = await orderBurgerApi(ingredientsIds);
+      return data.order;
+    } catch (err) {
+      const message =
+        err && typeof err === 'object' && 'message' in err
+          ? String((err as { message?: unknown }).message)
+          : 'Failed to create order';
+      return rejectWithValue(message);
+    }
   }
 );
 
 const constructorSlice = createSlice({
-  name: 'constructor',
+  name: 'burgerConstructor',
   initialState,
   reducers: {
     addIngredient: (state, action: PayloadAction<TIngredient>) => {
-      if (action.payload.type === 'bun') {
-        state.bun = action.payload;
+      const ingredient = action.payload;
+      if (ingredient.type === 'bun') {
+        state.bun = ingredient;
         return;
       }
-
-      state.items.push({
-        id: nanoid(),
-        ingredient: action.payload
-      });
+      state.items.push({ id: nanoid(), ingredient });
     },
     removeIngredient: (state, action: PayloadAction<string>) => {
       state.items = state.items.filter((item) => item.id !== action.payload);
     },
+    moveIngredientUp: (state, action: PayloadAction<number>) => {
+      const index = action.payload;
+      if (index <= 0 || index >= state.items.length) return;
+      const temp = state.items[index - 1];
+      state.items[index - 1] = state.items[index];
+      state.items[index] = temp;
+    },
+    moveIngredientDown: (state, action: PayloadAction<number>) => {
+      const index = action.payload;
+      if (index < 0 || index >= state.items.length - 1) return;
+      const temp = state.items[index + 1];
+      state.items[index + 1] = state.items[index];
+      state.items[index] = temp;
+    },
     clearConstructor: (state) => {
       state.bun = null;
       state.items = [];
-      state.orderRequest = false;
-      state.orderModalData = null;
     },
     clearOrderModal: (state) => {
-      state.orderRequest = false;
       state.orderModalData = null;
     }
   },
@@ -72,6 +92,8 @@ const constructorSlice = createSlice({
       .addCase(createOrder.fulfilled, (state, action) => {
         state.orderRequest = false;
         state.orderModalData = action.payload;
+        state.bun = null;
+        state.items = [];
       })
       .addCase(createOrder.rejected, (state) => {
         state.orderRequest = false;
@@ -83,6 +105,8 @@ const constructorSlice = createSlice({
 export const {
   addIngredient,
   removeIngredient,
+  moveIngredientUp,
+  moveIngredientDown,
   clearConstructor,
   clearOrderModal
 } = constructorSlice.actions;

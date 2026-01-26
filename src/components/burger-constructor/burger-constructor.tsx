@@ -7,6 +7,7 @@ import {
   clearOrderModal,
   createOrder
 } from '../../services/slices/constructorSlice';
+import { fetchFeedOrders } from '../../services/slices/feedSlice';
 import { getCookie } from '../../utils/cookie';
 
 export const BurgerConstructor: FC = () => {
@@ -23,48 +24,50 @@ export const BurgerConstructor: FC = () => {
     (state) => state.burgerConstructor.orderModalData
   );
 
-  const constructorItems = useMemo(
-    () => ({
+  const constructorItems = useMemo(() => {
+    const ingredients: TConstructorIngredient[] = items.map((item) => ({
+      ...item.ingredient,
+      id: item.id
+    })) as unknown as TConstructorIngredient[];
+
+    return {
       bun,
-      ingredients: items.map((item) => ({
-        ...item.ingredient,
-        id: item.id
-      })) as unknown as TConstructorIngredient[]
-    }),
-    [bun, items]
-  );
+      ingredients
+    };
+  }, [bun, items]);
 
-  const onOrderClick = () => {
-    if (!constructorItems.bun || orderRequest) return;
-
-    const accessToken = getCookie('accessToken');
-    if (!accessToken) {
-      navigate('/login', { state: { from: location } });
-      return;
-    }
-
-    const ingredientIds = [
-      constructorItems.bun._id,
-      ...constructorItems.ingredients.map((ingredient) => ingredient._id),
-      constructorItems.bun._id
-    ];
-
-    dispatch(createOrder(ingredientIds));
-  };
+  const price = useMemo(() => {
+    const bunPrice = bun ? bun.price * 2 : 0;
+    const ingredientsPrice = items.reduce(
+      (sum, item) => sum + item.ingredient.price,
+      0
+    );
+    return bunPrice + ingredientsPrice;
+  }, [bun, items]);
 
   const closeOrderModalHandler = () => {
     dispatch(clearOrderModal());
   };
 
-  const price = useMemo(() => {
-    const bunPrice = constructorItems.bun ? constructorItems.bun.price * 2 : 0;
-    const ingredientsPrice = constructorItems.ingredients.reduce(
-      (sum, ingredient) => sum + ingredient.price,
-      0
-    );
+  const onOrderClick = () => {
+    const accessToken = getCookie('accessToken');
 
-    return bunPrice + ingredientsPrice;
-  }, [constructorItems]);
+    if (!accessToken) {
+      navigate('/login', { state: { from: location } });
+      return;
+    }
+
+    if (!bun) return;
+
+    const ids = [bun._id, ...items.map((i) => i.ingredient._id), bun._id];
+
+    dispatch(createOrder(ids))
+      .unwrap()
+      .then(() => {
+        dispatch(fetchFeedOrders());
+      })
+      .catch(() => {});
+  };
 
   return (
     <BurgerConstructorUI

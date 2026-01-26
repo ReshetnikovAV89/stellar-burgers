@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import type { TOrder } from '../../utils/types';
+import { getFeedsApi } from '../../utils/burger-api';
 
 type TFeedState = {
   orders: TOrder[];
@@ -10,7 +11,7 @@ type TFeedState = {
   error: string | null;
 };
 
-type TFeedResponse = {
+type TFeedsResponse = {
   success: boolean;
   orders: TOrder[];
   total: number;
@@ -26,43 +27,54 @@ const initialState: TFeedState = {
 };
 
 export const fetchFeedOrders = createAsyncThunk<
-  TFeedResponse,
+  TFeedsResponse,
   void,
   { rejectValue: string }
 >('feed/fetchFeedOrders', async (_, { rejectWithValue }) => {
   try {
-    const res = await fetch('https://norma.nomoreparties.space/api/orders/all');
-    const data = (await res.json()) as TFeedResponse;
-
-    if (!res.ok || !data?.success) {
-      return rejectWithValue('Failed to fetch feed orders');
-    }
-
+    const data = await getFeedsApi();
     return data;
-  } catch {
-    return rejectWithValue('Failed to fetch feed orders');
+  } catch (err) {
+    const message =
+      err && typeof err === 'object' && 'message' in err
+        ? String((err as { message?: unknown }).message)
+        : 'Failed to fetch feed orders';
+    return rejectWithValue(message);
   }
 });
 
 const feedSlice = createSlice({
   name: 'feed',
   initialState,
-  reducers: {},
+  reducers: {
+    clearFeedError: (state) => {
+      state.error = null;
+    },
+    setFeed: (
+      state,
+      action: PayloadAction<{
+        orders: TOrder[];
+        total: number;
+        totalToday: number;
+      }>
+    ) => {
+      state.orders = action.payload.orders;
+      state.total = action.payload.total;
+      state.totalToday = action.payload.totalToday;
+    }
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchFeedOrders.pending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(
-        fetchFeedOrders.fulfilled,
-        (state, action: PayloadAction<TFeedResponse>) => {
-          state.isLoading = false;
-          state.orders = action.payload.orders;
-          state.total = action.payload.total;
-          state.totalToday = action.payload.totalToday;
-        }
-      )
+      .addCase(fetchFeedOrders.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.orders = action.payload.orders;
+        state.total = action.payload.total;
+        state.totalToday = action.payload.totalToday;
+      })
       .addCase(fetchFeedOrders.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload || 'Failed to fetch feed orders';
@@ -70,4 +82,5 @@ const feedSlice = createSlice({
   }
 });
 
+export const { clearFeedError, setFeed } = feedSlice.actions;
 export const feedReducer = feedSlice.reducer;

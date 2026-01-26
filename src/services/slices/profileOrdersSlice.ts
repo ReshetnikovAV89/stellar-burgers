@@ -1,17 +1,11 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import type { PayloadAction } from '@reduxjs/toolkit';
 import type { TOrder } from '../../utils/types';
-import { getCookie } from '../../utils/cookie';
+import { getOrdersApi } from '../../utils/burger-api';
 
 type TProfileOrdersState = {
   orders: TOrder[];
   isLoading: boolean;
   error: string | null;
-};
-
-type TProfileOrdersResponse = {
-  success: boolean;
-  orders: TOrder[];
 };
 
 const initialState: TProfileOrdersState = {
@@ -21,52 +15,46 @@ const initialState: TProfileOrdersState = {
 };
 
 export const fetchProfileOrders = createAsyncThunk<
-  TProfileOrdersResponse,
+  TOrder[],
   void,
   { rejectValue: string }
 >('profileOrders/fetchProfileOrders', async (_, { rejectWithValue }) => {
   try {
-    const token = getCookie('accessToken');
-
-    if (!token) {
-      return rejectWithValue('Unauthorized');
+    const data = await getOrdersApi();
+    if (Array.isArray(data)) {
+      return data as TOrder[];
     }
-
-    const res = await fetch('https://norma.nomoreparties.space/api/orders', {
-      headers: {
-        authorization: token
-      }
-    });
-
-    const data = (await res.json()) as TProfileOrdersResponse;
-
-    if (!res.ok || !data?.success) {
-      return rejectWithValue('Failed to fetch profile orders');
+    if (data && typeof data === 'object' && 'orders' in data) {
+      return (data as { orders: TOrder[] }).orders;
     }
-
-    return data;
-  } catch {
-    return rejectWithValue('Failed to fetch profile orders');
+    return [];
+  } catch (err) {
+    const message =
+      err && typeof err === 'object' && 'message' in err
+        ? String((err as { message?: unknown }).message)
+        : 'Failed to fetch profile orders';
+    return rejectWithValue(message);
   }
 });
 
 const profileOrdersSlice = createSlice({
   name: 'profileOrders',
   initialState,
-  reducers: {},
+  reducers: {
+    clearProfileOrdersError: (state) => {
+      state.error = null;
+    }
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchProfileOrders.pending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(
-        fetchProfileOrders.fulfilled,
-        (state, action: PayloadAction<TProfileOrdersResponse>) => {
-          state.isLoading = false;
-          state.orders = action.payload.orders;
-        }
-      )
+      .addCase(fetchProfileOrders.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.orders = action.payload;
+      })
       .addCase(fetchProfileOrders.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload || 'Failed to fetch profile orders';
@@ -74,4 +62,5 @@ const profileOrdersSlice = createSlice({
   }
 });
 
+export const { clearProfileOrdersError } = profileOrdersSlice.actions;
 export const profileOrdersReducer = profileOrdersSlice.reducer;
