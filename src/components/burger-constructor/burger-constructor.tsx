@@ -73,7 +73,7 @@ export const BurgerConstructor: FC = () => {
       orderRequest={orderRequest}
       constructorItems={constructorItems}
       orderModalData={orderModalData}
-      onSubmit={onOrderClick}
+      onOrderClick={onOrderClick}
       closeOrderModal={closeOrderModalHandler}
     />
   );

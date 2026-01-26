@@ -5,6 +5,6 @@ export type BurgerConstructorUIProps = {
   orderRequest: boolean;
   price: number;
   orderModalData: TOrder | null;
-  onSubmit: () => void;
+  onOrderClick: () => void;
   closeOrderModal: () => void;
 };
