@@ -8,23 +8,22 @@ const WS_USER_ORDERS_URL = 'wss://norma.nomoreparties.space/orders';
 
 export const ProfileOrders: FC = () => {
   const dispatch = useDispatch();
-  const user = useSelector((state) => state.auth.user);
   const orders = useSelector((state) => state.profileOrders.orders);
 
   useEffect(() => {
-    const rawToken = getCookie('accessToken') || '';
+    const rawToken = getCookie('accessToken');
+    if (!rawToken) return;
+
     const token = rawToken.replace(/^Bearer\s+/i, '');
 
-    if (user && token) {
-      dispatch(
-        profileOrdersWsActions.connect(`${WS_USER_ORDERS_URL}?token=${token}`)
-      );
-    }
+    dispatch(
+      profileOrdersWsActions.connect(`${WS_USER_ORDERS_URL}?token=${token}`)
+    );
 
     return () => {
       dispatch(profileOrdersWsActions.disconnect());
     };
-  }, [dispatch, user]);
+  }, [dispatch]);
 
   return <ProfileOrdersUI orders={orders} />;
 };
