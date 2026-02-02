@@ -23,8 +23,12 @@ export const IngredientDetails: FC = () => {
     [items, id]
   );
 
-  if (isLoading || !ingredientData) {
+  if (isLoading) {
     return <Preloader />;
+  }
+
+  if (!ingredientData) {
+    return null;
   }
 
   return <IngredientDetailsUI ingredientData={ingredientData} />;
