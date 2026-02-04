@@ -20,12 +20,24 @@ export const ProtectedRoute: FC<ProtectedRouteProps> = ({
 
   const isAuthenticated = Boolean(user);
 
-  if (onlyUnAuth && isAuthenticated) {
-    return <Navigate to='/' replace />;
-  }
-
   if (!onlyUnAuth && !isAuthenticated) {
     return <Navigate to='/login' state={{ from: location }} replace />;
+  }
+
+  if (onlyUnAuth && isAuthenticated) {
+    const from = (
+      location.state as {
+        from?: { pathname?: string; search?: string; hash?: string };
+      } | null
+    )?.from;
+    const to = from
+      ? {
+          pathname: from.pathname || '/',
+          search: from.search || '',
+          hash: from.hash || ''
+        }
+      : { pathname: '/' };
+    return <Navigate to={to} replace />;
   }
 
   return children;

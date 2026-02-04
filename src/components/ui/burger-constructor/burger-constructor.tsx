@@ -22,6 +22,9 @@ export const BurgerConstructorUI: FC<BurgerConstructorUIProps> = ({
     className={styles.burger_constructor}
     onSubmit={(e) => {
       e.preventDefault();
+      const submitter = (e.nativeEvent as SubmitEvent)
+        .submitter as HTMLButtonElement | null;
+      if (submitter && submitter.name !== 'order') return;
       onOrderClick();
     }}
   >
@@ -88,7 +91,7 @@ export const BurgerConstructorUI: FC<BurgerConstructorUIProps> = ({
         <CurrencyIcon type='primary' />
       </div>
 
-      <Button htmlType='submit' type='primary' size='large'>
+      <Button htmlType='submit' type='primary' size='large' name='order'>
         Оформить заказ
       </Button>
     </div>

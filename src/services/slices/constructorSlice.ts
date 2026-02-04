@@ -19,6 +19,11 @@ type ConstructorState = {
   orderModalData: TOrder | null;
 };
 
+type AddIngredientPayload = {
+  ingredient: TIngredient;
+  id: string;
+};
+
 const initialState: ConstructorState = {
   bun: null,
   items: [],
@@ -50,13 +55,17 @@ const constructorSlice = createSlice({
   name: 'burgerConstructor',
   initialState,
   reducers: {
-    addIngredient: (state, action: PayloadAction<TIngredient>) => {
-      const ingredient = action.payload;
-      if (ingredient.type === 'bun') {
-        state.bun = ingredient;
-        return;
-      }
-      state.items.push({ id: nanoid(), ingredient });
+    addIngredient: {
+      reducer: (state, action: PayloadAction<AddIngredientPayload>) => {
+        const { ingredient, id } = action.payload;
+        state.items.push({ id, ingredient });
+      },
+      prepare: (ingredient: TIngredient) => ({
+        payload: { ingredient, id: nanoid() }
+      })
+    },
+    setBun: (state, action: PayloadAction<TIngredient>) => {
+      state.bun = action.payload;
     },
     removeIngredient: (state, action: PayloadAction<string>) => {
       state.items = state.items.filter((item) => item.id !== action.payload);
@@ -104,6 +113,7 @@ const constructorSlice = createSlice({
 
 export const {
   addIngredient,
+  setBun,
   removeIngredient,
   moveIngredientUp,
   moveIngredientDown,

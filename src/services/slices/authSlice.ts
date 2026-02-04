@@ -9,7 +9,7 @@ import {
   type TLoginData,
   type TRegisterData
 } from '../../utils/burger-api';
-import { setCookie } from '../../utils/cookie';
+import { setCookie, deleteCookie } from '../../utils/cookie';
 
 type AuthState = {
   user: TUser | null;
@@ -31,8 +31,8 @@ const saveTokens = (refreshToken: string, accessToken: string) => {
 };
 
 const clearTokens = () => {
-  localStorage.removeItem('refreshToken');
-  setCookie('accessToken', '');
+  localStorage.clear();
+  deleteCookie('accessToken');
 };
 
 export const checkUserAuth = createAsyncThunk<
