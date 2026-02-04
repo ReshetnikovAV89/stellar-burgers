@@ -1,4 +1,4 @@
-import { FC, useMemo, useRef, useState } from 'react';
+import { FC, useMemo, useRef, useState, useCallback } from 'react';
 import { BurgerIngredientsUI } from '@ui';
 import { useSelector } from '../../services/store';
 import { TTabMode } from '@utils-types';
@@ -12,9 +12,21 @@ export const BurgerIngredients: FC = () => {
   const titleMainRef = useRef<HTMLHeadingElement>(null);
   const titleSaucesRef = useRef<HTMLHeadingElement>(null);
 
-  const bunsRef = () => {};
-  const mainsRef = () => {};
-  const saucesRef = () => {};
+  const bunsSectionRef = useRef<Element | null>(null);
+  const mainsSectionRef = useRef<Element | null>(null);
+  const saucesSectionRef = useRef<Element | null>(null);
+
+  const bunsRef = useCallback((node?: Element | null) => {
+    bunsSectionRef.current = node ?? null;
+  }, []);
+
+  const mainsRef = useCallback((node?: Element | null) => {
+    mainsSectionRef.current = node ?? null;
+  }, []);
+
+  const saucesRef = useCallback((node?: Element | null) => {
+    saucesSectionRef.current = node ?? null;
+  }, []);
 
   const buns = useMemo(() => items.filter((i) => i.type === 'bun'), [items]);
   const mains = useMemo(() => items.filter((i) => i.type === 'main'), [items]);
