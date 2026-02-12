@@ -1,0 +1,33 @@
+{
+  "success": true,
+  "data": [
+    {
+      "_id": "bun-1",
+      "name": "Булка тестовая",
+      "type": "bun",
+      "proteins": 10,
+      "fat": 10,
+      "carbohydrates": 10,
+      "calories": 100,
+      "price": 50,
+      "image": "https://code.s3.yandex.net/react/code/bun-01.png",
+      "image_mobile": "https://code.s3.yandex.net/react/code/bun-01-mobile.png",
+      "image_large": "https://code.s3.yandex.net/react/code/bun-01-large.png",
+      "__v": 0
+    },
+    {
+      "_id": "main-1",
+      "name": "Начинка тестовая",
+      "type": "main",
+      "proteins": 20,
+      "fat": 20,
+      "carbohydrates": 20,
+      "calories": 200,
+      "price": 80,
+      "image": "https://code.s3.yandex.net/react/code/meat-01.png",
+      "image_mobile": "https://code.s3.yandex.net/react/code/meat-01-mobile.png",
+      "image_large": "https://code.s3.yandex.net/react/code/meat-01-large.png",
+      "__v": 0
+    }
+  ]
+}
