@@ -4,9 +4,7 @@ describe('Burger constructor', () => {
   const orderNumber = 12345;
 
   const modalsRoot = () => cy.get('#modals');
-
   const modalEl = () => modalsRoot().find('[class*="modal"]');
-
   const overlayEl = () => modalsRoot().find('[class*="overlay"]');
 
   const modalExists = () =>
@@ -66,6 +64,11 @@ describe('Burger constructor', () => {
     cy.wait('@getIngredients');
   });
 
+  afterEach(() => {
+    cy.clearCookie('accessToken');
+    cy.clearLocalStorage();
+  });
+
   it('adds bun and filling to constructor', () => {
     cy.contains('li', bunName).within(() => cy.contains('Добавить').click());
     cy.contains('li', mainName).within(() => cy.contains('Добавить').click());
@@ -77,6 +80,7 @@ describe('Burger constructor', () => {
   it('opens and closes ingredient modal', () => {
     openIngredientDetails(mainName);
     cy.contains('Детали ингредиента').should('exist');
+    modalsRoot().contains(mainName).should('exist');
 
     modalExists().then((hasModal) => {
       if (hasModal) {
@@ -89,6 +93,7 @@ describe('Burger constructor', () => {
 
     openIngredientDetails(mainName);
     cy.contains('Детали ингредиента').should('exist');
+    modalsRoot().contains(mainName).should('exist');
 
     modalExists().then((hasModal) => {
       if (hasModal) {
