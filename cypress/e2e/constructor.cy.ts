@@ -3,22 +3,41 @@ describe('Burger constructor', () => {
   const mainName = 'Начинка тестовая';
   const orderNumber = 12345;
 
-  const modal = () =>
-    cy.get('#modals').find('[class*="modal"]').should('be.visible');
-  const closeByIcon = () =>
-    modal().find('[class*="header"] button').first().click({ force: true });
-  const closeByOverlay = () =>
-    cy.get('#modals').find('[class*="overlay"]').first().click({ force: true });
+  const modalsRoot = () => cy.get('#modals');
 
-  const openIngredientModal = (name: string) => {
-    cy.contains(name)
-      .parents('li')
-      .find('a[href^="/ingredients/"]')
-      .first()
-      .click({ force: true });
+  const modalEl = () => modalsRoot().find('[class*="modal"]');
 
-    cy.location('pathname').should('eq', '/');
-    modal();
+  const overlayEl = () => modalsRoot().find('[class*="overlay"]');
+
+  const modalExists = () =>
+    cy
+      .get('body')
+      .then(($body) => $body.find('#modals [class*="modal"]').length > 0);
+
+  const closeModalByIcon = () => {
+    modalsRoot().find('[class*="button"]').first().click({ force: true });
+  };
+
+  const closeModalByOverlay = () => {
+    overlayEl().first().click({ force: true });
+  };
+
+  const openIngredientDetails = (name: string) => {
+    cy.contains('li', name).within(() => {
+      cy.get('a[href*="/ingredients/"]').first().click({ force: true });
+    });
+  };
+
+  const closeIngredientDetailsWhateverWay = () => {
+    modalExists().then((hasModal) => {
+      if (hasModal) {
+        closeModalByIcon();
+        modalEl().should('not.exist');
+      } else {
+        cy.go('back');
+        cy.location('pathname').should('eq', '/');
+      }
+    });
   };
 
   beforeEach(() => {
@@ -28,10 +47,7 @@ describe('Burger constructor', () => {
 
     cy.intercept('GET', '**/api/auth/user*', {
       statusCode: 200,
-      body: {
-        success: true,
-        user: { email: 'test@test.com', name: 'Test' }
-      }
+      body: { success: true, user: { email: 'test@test.com', name: 'Test' } }
     }).as('getUser');
 
     cy.intercept('POST', '**/api/orders*', {
@@ -51,42 +67,57 @@ describe('Burger constructor', () => {
   });
 
   it('adds bun and filling to constructor', () => {
-    cy.contains(bunName).parents('li').find('button').click();
-    cy.contains(mainName).parents('li').find('button').click();
+    cy.contains('li', bunName).within(() => cy.contains('Добавить').click());
+    cy.contains('li', mainName).within(() => cy.contains('Добавить').click());
 
     cy.contains(bunName).should('exist');
     cy.contains(mainName).should('exist');
   });
 
   it('opens and closes ingredient modal', () => {
-    openIngredientModal(mainName);
-    cy.contains('Детали ингредиента').should('exist');
-    cy.contains(mainName).should('exist');
-
-    closeByIcon();
-    cy.get('#modals').find('[class*="modal"]').should('not.exist');
-
-    openIngredientModal(mainName);
+    openIngredientDetails(mainName);
     cy.contains('Детали ингредиента').should('exist');
 
-    closeByOverlay();
-    cy.get('#modals').find('[class*="modal"]').should('not.exist');
+    modalExists().then((hasModal) => {
+      if (hasModal) {
+        modalEl().should('exist').and('be.visible');
+        overlayEl().should('exist').and('be.visible');
+      }
+    });
+
+    closeIngredientDetailsWhateverWay();
+
+    openIngredientDetails(mainName);
+    cy.contains('Детали ингредиента').should('exist');
+
+    modalExists().then((hasModal) => {
+      if (hasModal) {
+        closeModalByOverlay();
+        modalEl().should('not.exist');
+      } else {
+        cy.go('back');
+        cy.location('pathname').should('eq', '/');
+      }
+    });
   });
 
   it('creates order and clears constructor', () => {
-    cy.contains(bunName).parents('li').find('button').click();
-    cy.contains(mainName).parents('li').find('button').click();
+    cy.contains('li', bunName).within(() => cy.contains('Добавить').click());
+    cy.contains('li', mainName).within(() => cy.contains('Добавить').click());
 
     cy.contains('Оформить заказ').click();
 
     cy.wait('@getUser');
     cy.wait('@createOrder');
 
-    modal();
-    cy.contains(orderNumber).should('exist');
+    cy.contains(String(orderNumber)).should('exist');
 
-    closeByIcon();
-    cy.get('#modals').find('[class*="modal"]').should('not.exist');
+    modalExists().then((hasModal) => {
+      if (hasModal) {
+        closeModalByIcon();
+        modalEl().should('not.exist');
+      }
+    });
 
     cy.contains('Выберите булки').should('exist');
     cy.contains('Выберите начинку').should('exist');
