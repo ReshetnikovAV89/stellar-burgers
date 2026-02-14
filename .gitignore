@@ -7,3 +7,4 @@ dump/
 cypress/videos/
 cypress/screenshots/
 cypress-run.log
+coverage/
