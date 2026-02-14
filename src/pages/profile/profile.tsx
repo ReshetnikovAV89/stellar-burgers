@@ -1,49 +1,75 @@
 import { ProfileUI } from '@ui-pages';
-import { FC, SyntheticEvent, useEffect, useState } from 'react';
+import { FC, SyntheticEvent, useEffect, useMemo, useState } from 'react';
+
+import { useDispatch, useSelector } from '../../services/store';
+import { updateUser } from '../../services/slices/authSlice';
 
 export const Profile: FC = () => {
-  /** TODO: взять переменную из стора */
-  const user = {
-    name: '',
-    email: ''
-  };
+  const dispatch = useDispatch();
+  const user = useSelector((state) => state.auth.user);
 
   const [formValue, setFormValue] = useState({
-    name: user.name,
-    email: user.email,
+    name: '',
+    email: '',
     password: ''
   });
 
   useEffect(() => {
-    setFormValue((prevState) => ({
-      ...prevState,
-      name: user?.name || '',
-      email: user?.email || ''
-    }));
+    setFormValue({
+      name: user?.name ?? '',
+      email: user?.email ?? '',
+      password: ''
+    });
   }, [user]);
 
-  const isFormChanged =
-    formValue.name !== user?.name ||
-    formValue.email !== user?.email ||
-    !!formValue.password;
+  const isFormChanged = useMemo(() => {
+    const name = user?.name ?? '';
+    const email = user?.email ?? '';
 
-  const handleSubmit = (e: SyntheticEvent) => {
-    e.preventDefault();
+    return (
+      formValue.name !== name ||
+      formValue.email !== email ||
+      Boolean(formValue.password)
+    );
+  }, [formValue, user]);
+
+  const handleSubmit = (event: SyntheticEvent) => {
+    event.preventDefault();
+
+    const payload: { name?: string; email?: string; password?: string } = {};
+
+    if (formValue.name !== (user?.name ?? '')) {
+      payload.name = formValue.name;
+    }
+
+    if (formValue.email !== (user?.email ?? '')) {
+      payload.email = formValue.email;
+    }
+
+    if (formValue.password) {
+      payload.password = formValue.password;
+    }
+
+    dispatch(updateUser(payload));
+    setFormValue((previousState) => ({
+      ...previousState,
+      password: ''
+    }));
   };
 
-  const handleCancel = (e: SyntheticEvent) => {
-    e.preventDefault();
+  const handleCancel = (event: SyntheticEvent) => {
+    event.preventDefault();
     setFormValue({
-      name: user.name,
-      email: user.email,
+      name: user?.name ?? '',
+      email: user?.email ?? '',
       password: ''
     });
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormValue((prevState) => ({
-      ...prevState,
-      [e.target.name]: e.target.value
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setFormValue((previousState) => ({
+      ...previousState,
+      [event.target.name]: event.target.value
     }));
   };
 
@@ -56,6 +82,4 @@ export const Profile: FC = () => {
       handleInputChange={handleInputChange}
     />
   );
-
-  return null;
 };

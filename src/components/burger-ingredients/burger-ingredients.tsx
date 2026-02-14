@@ -1,44 +1,44 @@
-import { useState, useRef, useEffect, FC } from 'react';
-import { useInView } from 'react-intersection-observer';
-
+import { FC, useMemo, useRef, useState, useCallback } from 'react';
+import { BurgerIngredientsUI } from '@ui';
+import { useSelector } from '../../services/store';
 import { TTabMode } from '@utils-types';
-import { BurgerIngredientsUI } from '../ui/burger-ingredients';
 
 export const BurgerIngredients: FC = () => {
-  /** TODO: взять переменные из стора */
-  const buns = [];
-  const mains = [];
-  const sauces = [];
+  const items = useSelector((state) => state.ingredients.items);
 
   const [currentTab, setCurrentTab] = useState<TTabMode>('bun');
+
   const titleBunRef = useRef<HTMLHeadingElement>(null);
   const titleMainRef = useRef<HTMLHeadingElement>(null);
   const titleSaucesRef = useRef<HTMLHeadingElement>(null);
 
-  const [bunsRef, inViewBuns] = useInView({
-    threshold: 0
-  });
+  const bunsSectionRef = useRef<Element | null>(null);
+  const mainsSectionRef = useRef<Element | null>(null);
+  const saucesSectionRef = useRef<Element | null>(null);
 
-  const [mainsRef, inViewFilling] = useInView({
-    threshold: 0
-  });
+  const bunsRef = useCallback((node?: Element | null) => {
+    bunsSectionRef.current = node ?? null;
+  }, []);
 
-  const [saucesRef, inViewSauces] = useInView({
-    threshold: 0
-  });
+  const mainsRef = useCallback((node?: Element | null) => {
+    mainsSectionRef.current = node ?? null;
+  }, []);
 
-  useEffect(() => {
-    if (inViewBuns) {
-      setCurrentTab('bun');
-    } else if (inViewSauces) {
-      setCurrentTab('sauce');
-    } else if (inViewFilling) {
-      setCurrentTab('main');
-    }
-  }, [inViewBuns, inViewFilling, inViewSauces]);
+  const saucesRef = useCallback((node?: Element | null) => {
+    saucesSectionRef.current = node ?? null;
+  }, []);
 
-  const onTabClick = (tab: string) => {
-    setCurrentTab(tab as TTabMode);
+  const buns = useMemo(() => items.filter((i) => i.type === 'bun'), [items]);
+  const mains = useMemo(() => items.filter((i) => i.type === 'main'), [items]);
+  const sauces = useMemo(
+    () => items.filter((i) => i.type === 'sauce'),
+    [items]
+  );
+
+  const onTabClick = (val: string) => {
+    const tab = val as TTabMode;
+    setCurrentTab(tab);
+
     if (tab === 'bun')
       titleBunRef.current?.scrollIntoView({ behavior: 'smooth' });
     if (tab === 'main')
@@ -46,8 +46,6 @@ export const BurgerIngredients: FC = () => {
     if (tab === 'sauce')
       titleSaucesRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
-
-  return null;
 
   return (
     <BurgerIngredientsUI
