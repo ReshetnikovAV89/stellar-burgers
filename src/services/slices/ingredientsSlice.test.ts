@@ -13,15 +13,13 @@ const ingredients: TIngredient[] = [
     price: 50,
     image: 'bun.png',
     image_mobile: 'bun-m.png',
-    image_large: 'bun-l.png',
-    __v: 0
+    image_large: 'bun-l.png'
   }
 ];
 
 describe('ingredientsSlice reducer', () => {
   test('pending sets isLoading true and clears error', () => {
     const state0 = ingredientsReducer(undefined, { type: 'UNKNOWN' });
-
     const state1 = ingredientsReducer(
       state0,
       fetchIngredients.pending('', undefined)
@@ -33,7 +31,6 @@ describe('ingredientsSlice reducer', () => {
 
   test('fulfilled sets items and isLoading false', () => {
     const state0 = ingredientsReducer(undefined, { type: 'UNKNOWN' });
-
     const state1 = ingredientsReducer(
       state0,
       fetchIngredients.fulfilled(ingredients, '', undefined)
@@ -45,7 +42,6 @@ describe('ingredientsSlice reducer', () => {
 
   test('rejected sets error and isLoading false', () => {
     const state0 = ingredientsReducer(undefined, { type: 'UNKNOWN' });
-
     const state1 = ingredientsReducer(
       state0,
       fetchIngredients.rejected(

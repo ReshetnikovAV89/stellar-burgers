@@ -19,8 +19,7 @@ const bun: TIngredient = {
   price: 50,
   image: 'bun.png',
   image_mobile: 'bun-m.png',
-  image_large: 'bun-l.png',
-  __v: 0
+  image_large: 'bun-l.png'
 };
 
 const main1: TIngredient = {
@@ -34,8 +33,7 @@ const main1: TIngredient = {
   price: 80,
   image: 'm1.png',
   image_mobile: 'm1-m.png',
-  image_large: 'm1-l.png',
-  __v: 0
+  image_large: 'm1-l.png'
 };
 
 const main2: TIngredient = {
@@ -49,14 +47,12 @@ const main2: TIngredient = {
   price: 90,
   image: 'm2.png',
   image_mobile: 'm2-m.png',
-  image_large: 'm2-l.png',
-  __v: 0
+  image_large: 'm2-l.png'
 };
 
 describe('constructorSlice reducer', () => {
   test('addIngredient should add item with generated id', () => {
     const state0 = constructorReducer(undefined, { type: 'UNKNOWN' });
-
     const state1 = constructorReducer(state0, addIngredient(main1));
 
     expect(state1.items).toHaveLength(1);
@@ -67,12 +63,10 @@ describe('constructorSlice reducer', () => {
 
   test('removeIngredient should remove item by id', () => {
     const state0 = constructorReducer(undefined, { type: 'UNKNOWN' });
-
     const state1 = constructorReducer(state0, addIngredient(main1));
     const state2 = constructorReducer(state1, addIngredient(main2));
 
     const idToRemove = state2.items[0].id;
-
     const state3 = constructorReducer(state2, removeIngredient(idToRemove));
 
     expect(state3.items).toHaveLength(1);
@@ -81,7 +75,6 @@ describe('constructorSlice reducer', () => {
 
   test('moveIngredientUp should swap item with previous', () => {
     const state0 = constructorReducer(undefined, { type: 'UNKNOWN' });
-
     const state1 = constructorReducer(state0, addIngredient(main1));
     const state2 = constructorReducer(state1, addIngredient(main2));
 
@@ -93,7 +86,6 @@ describe('constructorSlice reducer', () => {
 
   test('moveIngredientDown should swap item with next', () => {
     const state0 = constructorReducer(undefined, { type: 'UNKNOWN' });
-
     const state1 = constructorReducer(state0, addIngredient(main1));
     const state2 = constructorReducer(state1, addIngredient(main2));
 
@@ -103,9 +95,29 @@ describe('constructorSlice reducer', () => {
     expect(state3.items[1].ingredient._id).toBe(main1._id);
   });
 
+  test('moveIngredientUp should not change state when moving first item up', () => {
+    const state0 = constructorReducer(undefined, { type: 'UNKNOWN' });
+    const state1 = constructorReducer(state0, addIngredient(main1));
+    const state2 = constructorReducer(state1, addIngredient(main2));
+
+    const state3 = constructorReducer(state2, moveIngredientUp(0));
+
+    expect(state3).toEqual(state2);
+  });
+
+  test('moveIngredientDown should not change state when moving last item down', () => {
+    const state0 = constructorReducer(undefined, { type: 'UNKNOWN' });
+    const state1 = constructorReducer(state0, addIngredient(main1));
+    const state2 = constructorReducer(state1, addIngredient(main2));
+
+    const lastIndex = state2.items.length - 1;
+    const state3 = constructorReducer(state2, moveIngredientDown(lastIndex));
+
+    expect(state3).toEqual(state2);
+  });
+
   test('setBun should set bun', () => {
     const state0 = constructorReducer(undefined, { type: 'UNKNOWN' });
-
     const state1 = constructorReducer(state0, setBun(bun));
 
     expect(state1.bun?._id).toBe(bun._id);
