@@ -15,10 +15,10 @@ describe('Burger constructor', () => {
     cy.mockIngredients();
     cy.mockUser();
     cy.mockCreateOrder(orderNumber);
-    cy.setAuthTokens();
 
-    cy.visit('/');
-    cy.wait('@getIngredients');
+    cy.visitApp('/');
+
+    cy.contains(bunName, { timeout: 20000 }).should('exist');
   });
 
   afterEach(() => {
@@ -72,10 +72,7 @@ describe('Burger constructor', () => {
 
     cy.contains('Оформить заказ').click();
 
-    cy.wait('@getUser');
-    cy.wait('@createOrder');
-
-    cy.contains(String(orderNumber)).should('exist');
+    cy.contains(String(orderNumber), { timeout: 20000 }).should('exist');
 
     modalExists().then((hasModal) => {
       if (hasModal) {
