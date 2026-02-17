@@ -14,6 +14,7 @@ declare global {
       openIngredientDetails(name: string): Chainable<void>;
       closeModalByIcon(): Chainable<void>;
       closeModalByOverlay(): Chainable<void>;
+      closeModalByEsc(): Chainable<void>;
     }
   }
 }
@@ -74,10 +75,7 @@ Cypress.Commands.add('visitApp', (path = '/') => {
                 success: true,
                 user: { email: 'test@test.com', name: 'Test' }
               }),
-              {
-                status: 200,
-                headers: { 'Content-Type': 'application/json' }
-              }
+              { status: 200, headers: { 'Content-Type': 'application/json' } }
             )
           );
         }
@@ -94,10 +92,7 @@ Cypress.Commands.add('visitApp', (path = '/') => {
                 name: 'test order',
                 order: { number: orderNumber }
               }),
-              {
-                status: 200,
-                headers: { 'Content-Type': 'application/json' }
-              }
+              { status: 200, headers: { 'Content-Type': 'application/json' } }
             )
           );
         }
@@ -135,4 +130,8 @@ Cypress.Commands.add('closeModalByIcon', () => {
 
 Cypress.Commands.add('closeModalByOverlay', () => {
   cy.get('#modals').find('[class*="overlay"]').first().click({ force: true });
+});
+
+Cypress.Commands.add('closeModalByEsc', () => {
+  cy.get('body').type('{esc}', { force: true });
 });

@@ -66,6 +66,24 @@ describe('Burger constructor', () => {
     });
   });
 
+  it('closes ingredient modal by Escape', () => {
+    cy.openIngredientDetails(mainName);
+
+    cy.contains('Детали ингредиента').should('exist');
+    modalsRoot().contains(mainName).should('exist');
+
+    modalExists().then((hasModal) => {
+      if (hasModal) {
+        modalEl().should('exist').and('be.visible');
+        cy.closeModalByEsc();
+        modalEl().should('not.exist');
+      } else {
+        cy.go('back');
+        cy.location('pathname').should('eq', '/');
+      }
+    });
+  });
+
   it('creates order and clears constructor', () => {
     cy.addIngredient(bunName);
     cy.addIngredient(mainName);
