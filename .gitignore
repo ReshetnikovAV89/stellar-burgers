@@ -3,3 +3,8 @@ node_modules
 .idea
 dist
 dump/
+# Cypress artifacts
+cypress/videos/
+cypress/screenshots/
+cypress-run.log
+coverage/
